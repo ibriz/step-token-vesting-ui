@@ -15,9 +15,8 @@ module.exports = function(deployer) {
   const stepVestingDuration = 30 * 24 * 60 * 60;
   const stepVestingPercent = 10;
 
-//(address _beneficiary, uint256 _start, uint256 _cliff, uint256 _cliffPercent, uint256 _stepVestingPercent,uint256 _numberOfPartitions, uint256 _stepVestingDuration, bool _revocable)
-  deployer.deploy(StepVesting, beneficiary, start, cliff, cliffPercent,stepVestingPercent,numberOfPartitions,stepVestingDuration,duration, true).then(() => {
-  //deployer.deploy(StepVesting, beneficiary, start, cliff, cliffPercent,stepVestingPercent, numberOfPartitions,stepVestingDuration,true).then(() => {
+//(address _beneficiary, uint256 _start, uint256 _cliffDuration, uint256 _cliffPercent, uint256 _stepVestingDuration, uint256 _stepVestingPercent, uint256 _numberOfPartitions,  bool _revocable)
+  deployer.deploy(StepVesting, beneficiary, start, cliff, cliffPercent,stepVestingDuration, stepVestingPercent,numberOfPartitions, true).then(() => {
     return deployer.deploy(SimpleToken)
   }).then(() => {
     const simpleToken = SimpleToken.at(SimpleToken.address);
