@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
-import { Grid, Row, Col } from 'react-bootstrap'
+import { Grid, Row, Col, ButtonToolbar, Button } from 'react-bootstrap'
 
 import { getTokenVesting, getSimpleToken } from '../contracts'
+import Network from '../network'
 
 import Header from './Header'
 import VestingDetails from './VestingDetails'
@@ -31,6 +32,20 @@ class TokenVestingApp extends Component {
         <Header address={ address } token={ token } tokenName={ this.state.name } />
 
         <Grid>
+         <Row>
+            <Col xs={12} md={12}>
+             <ButtonToolbar>
+               <Button
+                 bsStyle="primary"
+                 onClick={ () => {
+                   this.execute_vesting();
+                 } }
+               >
+                 Vest Token
+                </Button>
+              </ButtonToolbar>
+            </Col>
+            </Row>
           <Row>
             <Col xs={12} md={6}>
               <VestingDetails
@@ -85,6 +100,25 @@ class TokenVestingApp extends Component {
       symbol: await tokenContract.symbol(),
       loading: false
     })
+  }
+
+  async execute_vesting() {
+    const accounts = await Network.getAccounts()
+    const { address, token } = this.props
+    const tokenVesting = await getTokenVesting(address)
+
+    console.log(address, token)
+    try{
+      const response = await tokenVesting.release(token, {from: accounts[0]})
+      console.log(response);
+      setTimeout(() => {
+        this.getData();
+      }, 3000)
+    } catch (e) {
+      console.error(e);
+      alert("Problem with Vesting");
+    }
+
   }
 }
 

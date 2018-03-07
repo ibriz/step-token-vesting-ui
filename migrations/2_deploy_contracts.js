@@ -6,7 +6,7 @@ module.exports = function(deployer) {
 
   const start = Math.floor(Date.now()/1000)
   const cliff = 400 // ~1 yr
-  const duration = 3600 // ~4yrs
+  const duration = 400 // ~4yrs
   const amount = 1000 * 1e18
 
 
