@@ -30,9 +30,11 @@ contract StepVesting is TokenVesting {
         stepVestingPercent = _stepVestingPercent;
         numberOfPartitions = _numberOfPartitions;
         stepVestingDuration = _stepVestingDuration;
+        /*
         if((_cliffPercent + (_stepVestingPercent * numberOfPartitions)) != 100){
           revert();
-        }
+        }*/
+        require((_cliffPercent + (_stepVestingPercent * numberOfPartitions)) == 100);
     }
   /**
    * override
