@@ -13,9 +13,7 @@ const MintableToken = artifacts.require('MintableToken');
 
 const StepVesting = artifacts.require('StepVesting');
 
-const MyVesting = artifacts.require('MyVesting');
-
-contract('StepVesting', function ([_, owner, beneficiary]) {
+contract('TestStepVesting', function ([_, owner, beneficiary]) {
 
   const amount = new BigNumber(1000);
 
@@ -39,7 +37,8 @@ contract('StepVesting', function ([_, owner, beneficiary]) {
       this.stepVestingDuration,
       this.stepVestingPercent,
       this.numberOfPartitions,
-      true
+      true,
+      {from: owner}
       );
 
     await this.token.mint(this.vesting.address, amount, { from: owner });
@@ -62,30 +61,6 @@ contract('StepVesting', function ([_, owner, beneficiary]) {
 
   });
 
-  it('should fail to deploy if % does not add upto 100%', async function () {
-
-   this.token = await MintableToken.new({ from: owner });
-
-   this.start = timeUtils.latestTime() + timeUtils.duration.minutes(1); // +1 minute so it starts after contract instantiation
-   this.cliffDuration = timeUtils.duration.days(30);
-   this.cliffPercent = 21;
-   this.stepVestingDuration = timeUtils.duration.days(30);
-   this.stepVestingPercent = 10;
-   this.numberOfPartitions = 8;
-
-    await throwUtils.expectThrow ( StepVesting.new(
-     beneficiary,
-     this.start,
-     this.cliffDuration,
-     this.cliffPercent ,
-     this.stepVestingDuration,
-     this.stepVestingPercent,
-     this.numberOfPartitions,
-     true
-    ));
-  });
-
-
   it('should release 20% of amount after cliff', async function () {
     await timeUtils.increaseTimeTo(this.start + this.cliffDuration + timeUtils.duration.weeks(1));
 
@@ -107,7 +82,7 @@ contract('StepVesting', function ([_, owner, beneficiary]) {
 
     for (let i = 1; i <= checkpoints; i++) {
 
-      const now = this.start + this.cliffDuration + timeUtils.duration.minutes(1) + (i*this.stepVestingDuration);
+      const now = this.start+this.cliffDuration+ timeUtils.duration.minutes(1) + (i*this.stepVestingDuration);
 
       console.log("now:"+new Date(now*1000).toISOString());
 
@@ -116,8 +91,9 @@ contract('StepVesting', function ([_, owner, beneficiary]) {
       const { receipt }  = await this.vesting.release(this.token.address);
       const balance = await this.token.balanceOf(beneficiary);
 
-      const monthVesting = Math.round(Number(((now - this.start+this.cliffDuration)/this.stepVestingDuration)));
-      const monthVestingPercentage = monthVesting*10;
+      const monthVesting = new BigNumber(i); //how many months will be vested.
+      //we are vesting after cliff, so we expect 10% and added 20% by default
+      const monthVestingPercentage = monthVesting.mul(10).plus(20);
 
       const expectedVesting = amount.mul(monthVestingPercentage).div(100);
 
@@ -129,4 +105,3 @@ contract('StepVesting', function ([_, owner, beneficiary]) {
 
 
 });
-

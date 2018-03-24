@@ -1,26 +1,37 @@
 const StepVesting = artifacts.require("./StepVesting.sol")
 const SimpleToken = artifacts.require("SimpleToken")
+const OneTimeTokenVesting = artifacts.require("./OneTimeTokenVesting.sol");
 
 module.exports = function(deployer) {
-  const beneficiary = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+  //const beneficiary = "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
 
-  const start = Math.floor(Date.now()/1000)
-  const cliff = 400 // ~1 yr
-  const duration = 3600 // ~4yrs
-  const amount = 1000 * 1e18
+  const beneficiary = web3.eth.accounts[2];
+  const beneficiary2nd = web3.eth.accounts[3];
+
+  const start = web3.eth.getBlock('latest').timestamp + 60
+  const cliffDuration = 90 // ~1 yr
+  //const duration = 1050 // ~4yrs    (cliff + (stepVestingDuration * numberOfPartitions))
+  const amount = 100 * 1e18
 
 
   const cliffPercent = 20;
   const numberOfPartitions = 8;
-  const stepVestingDuration = 30 * 24 * 60 * 60;
+  //const stepVestingDuration = 30 * 24 * 60 * 60;
+  const stepVestingDuration = 120;
   const stepVestingPercent = 10;
 
-//(address _beneficiary, uint256 _start, uint256 _cliffDuration, uint256 _cliffPercent, uint256 _stepVestingDuration, uint256 _stepVestingPercent, uint256 _numberOfPartitions,  bool _revocable)
-  deployer.deploy(StepVesting, beneficiary, start, cliff, cliffPercent,stepVestingDuration, stepVestingPercent,numberOfPartitions, true).then(() => {
+   //passing all these params for now as ethereum doesn't handle floating or fixed point very well right now
+  deployer.deploy(StepVesting, beneficiary, start, cliffDuration, cliffPercent,stepVestingDuration,stepVestingPercent,numberOfPartitions, true)
+   .then(() => {
     return deployer.deploy(SimpleToken)
   }).then(() => {
     const simpleToken = SimpleToken.at(SimpleToken.address);
     console.log('StepVesting.address :' + StepVesting.address);
-    simpleToken.transfer(StepVesting.address, amount);
-  })
+    return simpleToken.transfer(StepVesting.address, amount);
+  }).then( () => {
+    console.log('beneficiary for OneTimeTokenVesting : ' + beneficiary2nd);
+    return deployer.deploy(OneTimeTokenVesting, beneficiary2nd, start, 360, true);
+  }).then( () => {
+    console.log("OneTimeTokenVesting address : " + OneTimeTokenVesting.address);
+  });
 }
